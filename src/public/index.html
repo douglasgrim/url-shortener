@@ -97,13 +97,13 @@
                 const tableBody = document.getElementById('dataTable');
                 tableBody.innerHTML = ''; // Clear existing table data
 
-                shortCodes.forEach(({ shortCode, longUrl, shortenedUrl }) => {
+                shortCodes.forEach(({ shortCode, url, short_url }) => {
                     const row = document.createElement('tr');
                     const id = `input-${shortCode}`;
                     row.innerHTML = `
                         <td class="border px-4 py-2">${shortCode}</td>
-                        <td class="border px-4 py-2">${longUrl}</td>
-                        <input style="display:none" type="text" id="${id}" value="${shortenedUrl}" />
+                        <td class="border px-4 py-2">${url}</td>
+                        <input style="display:none" type="text" id="${id}" value="${short_url}" />
                     `;
                     tableBody.appendChild(row);
                     row.addEventListener('click', () => {
@@ -139,14 +139,14 @@
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ longUrl }),
+                        body: JSON.stringify({ url: longUrl }),
                     });
 
                     const data = await response.json();
                     await fillTable(); // Refresh the table with new data - probably better to do an optimistic update or similar in the real world
 
                     if (response.ok) {
-                        shortenedUrlDisplay.value = data.shortenedUrl;
+                        shortenedUrlDisplay.value = data.short_url;
                         resultDiv.classList.remove('hidden');
                     } else {
                         errorMessageDiv.textContent = data.error || 'Something went wrong.';

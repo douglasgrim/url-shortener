@@ -31,23 +31,23 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // API endpoint to shorten a URL 
 app.post('/shorten', (req: express.Request, res: express.Response) => {
-    const { longUrl } = req.body;
+    const { url } = req.body;
 
-    if (!longUrl) {
-        return res.status(400).json({ error: 'longUrl is required' });
+    if (!url) {
+        return res.status(400).json({ error: 'url is required' });
     }
 
     // Basic URL validation (you might want a more robust validator)
     try {
-        new URL(longUrl);
+        new URL(url);
     } catch (e) {
         return res.status(400).json({ error: 'Invalid URL format' });
     }
 
     // Check if the URL has already been shortened
-    if (urlBitlyMap.has(longUrl)) {
-        const existingShortCode = urlBitlyMap.get(longUrl);
-        return res.json({ shortCode: existingShortCode, shortenedUrl: `${req.protocol}://${req.get('host')}/${existingShortCode}` });
+    if (urlBitlyMap.has(url)) {
+        const existingShortCode = urlBitlyMap.get(url);
+        return res.json({ shortCode: existingShortCode, short_url: `${req.protocol}://${req.get('host')}/${existingShortCode}` });
     }
 
     let shortCode: string;
@@ -56,24 +56,24 @@ app.post('/shorten', (req: express.Request, res: express.Response) => {
         shortCode = nanoid(7); // Generates a 7-character unique ID
     } while (bitlyUrlMap.has(shortCode));
 
-    bitlyUrlMap.set(shortCode, longUrl);
-    urlBitlyMap.set(longUrl, shortCode); // to prevent duplicate entries. This would be handled in a database in a less clunkly method obviously.
+    bitlyUrlMap.set(shortCode, url);
+    urlBitlyMap.set(url, shortCode); // to prevent duplicate entries. This would be handled in a database in a less clunkly method obviously.
 
     // Construct the full shortened URL
-    const shortenedUrl = `${req.protocol}://${req.get('host')}/${shortCode}`;
+    const short_url = `${req.protocol}://${req.get('host')}/${shortCode}`;
 
-    res.json({ shortCode, shortenedUrl });
+    res.json({ shortCode, short_url });
 });
 
 // API endpoint to redirect from a shortened URL
 app.get('/:shortCode', (req, res) => {
     const { shortCode } = req.params;
     console.log(shortCode)
-    const longUrl = bitlyUrlMap.get(shortCode);
+    const url = bitlyUrlMap.get(shortCode);
 
-    if (longUrl) {
+    if (url) {
         // Redirect to the original URL
-        res.redirect(302, longUrl);
+        res.redirect(302, url);
     } else {
         // If the short code is not found, send a 404 response
         res.status(404).send('URL not found');
@@ -82,7 +82,7 @@ app.get('/:shortCode', (req, res) => {
 
 // API endpoint to list all shortened URLs - using 'api' path here to avoid conflict with short codes
 app.get('/api/list-short-codes', (req, res) => {
-    const shortCodes = Array.from(bitlyUrlMap).map(([shortCode, longUrl]: [string, string]) => ({ shortCode, longUrl, shortenedUrl: `${req.protocol}://${req.get('host')}/${shortCode}` }));
+    const shortCodes = Array.from(bitlyUrlMap).map(([shortCode, url]: [string, string]) => ({ shortCode, url, short_url: `${req.protocol}://${req.get('host')}/${shortCode}` }));
     res.json({ shortCodes });
 });
 
